@@ -3,12 +3,14 @@
 * 30 Maggio 2017
 * TFL
 * Arduino MKR 1000
-* 
+*
 * DHT-11 pin 5
 * Photoresistor pin A0
+* Gas pin A1
+* Amps pin A2
 * Neopixel pin 3
-* Relay 6
-* 
+* Relay pin 6
+*
 * */
 #include "FastLED.h"
 #include <PubSubClient.h>
@@ -87,9 +89,7 @@ void setup_wifi() {
   Serial.print("signal strength (RSSI):");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
-  digitalWrite(builtinLed, 1);
-  delay(200);
-  digitalWrite(builtinLed, 0);
+  /*
   leds[0] = CRGB::Purple;
   FastLED.show();
   delay(500);
@@ -97,6 +97,7 @@ void setup_wifi() {
   leds[0] = CRGB::Black;
   FastLED.show();
   delay(500);
+  */
 }
 // if plus topic
 // void callback(Sting topic, byte* payload, unsigned int length) {
@@ -112,6 +113,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
     digitalWrite(builtinLed, HIGH);
+    leds[0] = CRGB::Green;
+    FastLED.show();
   }
   else if ((char)payload[0] == '2') {
     digitalWrite(relay, HIGH);
@@ -122,6 +125,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   else {
     digitalWrite(builtinLed, LOW);
     digitalWrite(relay, LOW);
+    leds[0] = CRGB::Red;
+    FastLED.show();
   }
 }
 
@@ -156,16 +161,16 @@ void loop() {
   if (now - lastMsg > 10000) {
     lastMsg = now;
     ++value;
-    
+
     // Amperometer
     Voltage = getVPP();
-    VRMS = (Voltage/2.0) *0.707; 
+    VRMS = (Voltage/2.0) *0.707;
     AmpsRMS = (VRMS * 1000)/mVperAmp; // Amp 0 - 20
     Watt = AmpsRMS * 220;
     // Gas
     int aria = analogRead(sensorGas);
     aria = map(aria, 0, 1023, 10, 10000); // particolato g/1000000
-    
+
     // Temperature
     float h = dht.readHumidity();
     float t = dht.readTemperature();
@@ -182,40 +187,42 @@ void loop() {
     client.publish("humi",String(h).c_str(), true);
     client.publish("gas",String(aria).c_str(), true);
     client.publish("amp",String(AmpsRMS).c_str(), true);
+    /*
     leds[0] = CRGB::Red;
     FastLED.show();
     delay(500);
     leds[0] = CRGB::Black;
     FastLED.show();
+    */
   }
 }
 float getVPP()
 {
   float result;
-  
+
   int readValue;             //value read from the sensor
   int maxValue = 0;          // store max value here
   int minValue = 1024;          // store min value here
-  
+
    uint32_t start_time = millis();
    while((millis()-start_time) < 1000) //sample for 1 Sec
    {
        readValue = analogRead(sensorIn);
        // see if you have a new maxValue
-       if (readValue > maxValue) 
+       if (readValue > maxValue)
        {
            /*record the maximum sensor value*/
            maxValue = readValue;
        }
-       if (readValue < minValue) 
+       if (readValue < minValue)
        {
            /*record the maximum sensor value*/
            minValue = readValue;
        }
    }
-   
+
    // Subtract min from max
    result = ((maxValue - minValue) * 5.0)/1024.0;
-      
+
    return result;
  }
