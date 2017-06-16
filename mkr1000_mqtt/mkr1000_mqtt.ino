@@ -5,9 +5,10 @@
 * Arduino MKR 1000
 *
 * DHT-11 pin 5
-* Photoresistor pin A0
+* NO Photoresistor pin A0
 * Gas pin A1
 * Amps pin A2
+* 
 * Neopixel pin 3
 * Relay pin 6
 *
@@ -28,9 +29,9 @@ CRGB leds[NUM_LEDS];
 #define DHTTYPE DHT11
 
 // Update these with values suitable for your network.
-const char* ssid = "Arduino_iot";
-const char* password = "cicciopanciccio";
-const char* mqtt_server = "192.168.0.102"; // Raspberry IP
+const char* ssid = "TalentGarden";
+const char* password = "Calabiana2017";
+const char* mqtt_server = "10.13.2.45"; // Raspberry IP 192.168.0.102
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -165,15 +166,15 @@ void loop() {
     // Amperometer
     Voltage = getVPP();
     VRMS = (Voltage/2.0) *0.707;
-    AmpsRMS = (VRMS * 1000)/mVperAmp; // Amp 0 - 20
-    Watt = AmpsRMS * 220;
+    AmpsRMS = ((VRMS * 1000)/mVperAmp) - 0.86; // Amp 0 - 20
+    
     // Gas
     int aria = analogRead(sensorGas);
     aria = map(aria, 0, 1023, 10, 10000); // particolato g/1000000
 
     // Temperature
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
+    float h = dht.readHumidity() - (h*0.15);
+    float t = dht.readTemperature() - 5;
     int lux = analogRead(photo);
     snprintf (msg, 75, "hello world #%ld", value);
     Serial.print("Publish message: ");
