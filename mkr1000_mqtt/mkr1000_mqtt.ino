@@ -8,7 +8,7 @@
 * NO Photoresistor pin A0
 * Gas pin A1
 * Amps pin A2
-* 
+*
 * Neopixel pin 3
 * Relay pin 6
 *
@@ -29,9 +29,9 @@ CRGB leds[NUM_LEDS];
 #define DHTTYPE DHT11
 
 // Update these with values suitable for your network.
-const char* ssid = "TalentGarden";
-const char* password = "Calabiana2017";
-const char* mqtt_server = "10.13.2.45"; // Raspberry IP 192.168.0.102
+const char* ssid = "Modem4G-C0BD";
+const char* password = "yedf7a8q";
+const char* mqtt_server = "192.168.8.101"; // Raspberry IP 192.168.0.102
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -59,7 +59,7 @@ void setup() {
   pinMode(builtinLed, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(9600);
   setup_wifi();
-  client.setServer(mqtt_server, 1883);
+  client.setServer(mqtt_server, 1883); //1883
   client.setCallback(callback);
   dht.begin();
   float t = dht.readTemperature();
@@ -74,6 +74,11 @@ void setup_wifi() {
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
+
+  //IPAddress ipa(10, 13, 7, 200);
+  //IPAddress gate(10, 13, 0, 1);
+  //IPAddress sub (255, 255, 255, 0);
+  //WiFi.config(ipa, gate, sub);
 
   WiFi.begin(ssid, password);
 
@@ -167,7 +172,7 @@ void loop() {
     Voltage = getVPP();
     VRMS = (Voltage/2.0) *0.707;
     AmpsRMS = ((VRMS * 1000)/mVperAmp) - 0.86; // Amp 0 - 20
-    
+
     // Gas
     int aria = analogRead(sensorGas);
     aria = map(aria, 0, 1023, 10, 10000); // particolato g/1000000
