@@ -13,6 +13,7 @@
 * Relay pin 6
 *
 * */
+
 #include "FastLED.h"
 #include <PubSubClient.h>
 #include "DHT.h"
@@ -29,8 +30,8 @@ CRGB leds[NUM_LEDS];
 #define DHTTYPE DHT11
 
 // Update these with values suitable for your network.
-const char* ssid = "Modem4G-C0BD";
-const char* password = "yedf7a8q";
+const char* ssid = "TalentGarden";
+const char* password = "Calabiana2017";
 const char* mqtt_server = "10.13.0.13"; // Raspberry IP 10.13.0.13
 
 WiFiClient espClient;
@@ -38,13 +39,12 @@ PubSubClient client(espClient);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
-int builtinLed = 6;
 int relay = 7;
 
 DHT dht(DHTPIN, DHTTYPE);
 
 // Photoresistor
-const int photo = A0;
+const int photo = A3;
 // Gas sensor
 const int sensorGas = A1;
 // Amp
@@ -56,8 +56,9 @@ double AmpsRMS = 0;
 int Watt = 0;
 
 void setup() {
-  pinMode(builtinLed, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
+  pinMode(relay, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(9600);
+  pinMode(relay, HIGH);
   setup_wifi();
   client.setServer(mqtt_server, 1883); //1883
   client.setCallback(callback);
@@ -77,7 +78,8 @@ void setup_wifi() {
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
-  IPAddress ipa(10, 13, 0, 14);
+  //change IP address
+  IPAddress ipa(10, 13, 0, 16); //10.13.0.14 - 15 - 16
   IPAddress gate(10, 13, 0, 1);
   IPAddress sub (255, 255, 255, 0);
   WiFi.config(ipa, gate, sub);
@@ -97,7 +99,7 @@ void setup_wifi() {
   Serial.print("signal strength (RSSI):");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
-
+  
   /*
   leds[0] = CRGB::Purple;
   FastLED.show();
@@ -111,6 +113,7 @@ void setup_wifi() {
 // if plus topic
 // void callback(Sting topic, byte* payload, unsigned int length) {
 void callback(char* topic, byte* payload, unsigned int length) {
+ 
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -121,19 +124,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
-    digitalWrite(builtinLed, HIGH);
+    digitalWrite(relay, LOW);
     leds[0] = CRGB::Green;
     FastLED.show();
   }
+  // different logic foir relay
   else if ((char)payload[0] == '2') {
-    digitalWrite(relay, HIGH);
+    digitalWrite(relay, LOW);
   }
   else if ((char )payload[0] == '3') {
-    digitalWrite(relay, LOW);
+    digitalWrite(relay, HIGH);
   }
   else {
-    digitalWrite(builtinLed, LOW);
-    digitalWrite(relay, LOW);
+    digitalWrite(relay, HIGH);
     leds[0] = CRGB::Red;
     FastLED.show();
   }
@@ -146,10 +149,7 @@ void reconnect() {
     // Attempt to connect
     if (client.connect(mqtt_server)) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
-      // ... and resubscribe
-      client.subscribe("inTopic");
+      client.subscribe("inTopic3");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -164,8 +164,9 @@ void loop() {
   if (!client.connected()) {
     reconnect();
   }
+  
   client.loop();
-
+  
   long now = millis();
   if (now - lastMsg > 10000) {
     lastMsg = now;
@@ -188,14 +189,10 @@ void loop() {
     Serial.print("Publish message: ");
     Serial.println(msg);
     Serial.print(lux);
-
+    
     //client.publish("outTopic", msg);
-    client.publish("time",String(value).c_str(), true);
-    client.publish("temp",String(t).c_str(), true);
-    client.publish("lux",String(lux).c_str(), true);
-    client.publish("humi",String(h).c_str(), true);
-    client.publish("gas",String(aria).c_str(), true);
-    client.publish("amp",String(AmpsRMS).c_str(), true);
+    client.publish("time3",String(value).c_str(), true);
+    client.publish("amp3",String(AmpsRMS).c_str(), true);
     /*
     leds[0] = CRGB::Red;
     FastLED.show();
