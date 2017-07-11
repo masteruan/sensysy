@@ -1,8 +1,18 @@
 /*
 * Satellite
-* 30 Maggio 2017
+* 11 Luglio 2017
 * TFL
 * Arduino MKR 1000
+*
+* Satellite numero 2
+* intopic2
+* IP 10.13.0.15
+* pubblish time2
+* pubblish temp2
+* pubblish lux2
+* pubblish humi2
+* pubblish gas2
+* pubblish amp2
 *
 * DHT-11 pin 5
 * NO Photoresistor pin A0
@@ -34,8 +44,9 @@ CRGB leds[NUM_LEDS];
 // put leds white
 unsigned long timer;
 unsigned long previousMillis = 0;
-const long interval = 10000;
+const long intervallo = 10;
 unsigned long call;
+
 
 // Update these with values suitable for your network.
 const char* ssid = "TalentGarden";
@@ -76,7 +87,6 @@ void setup() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   leds[0] = CRGB::White;
   FastLED.show();
-  timer=millis();
 }
 
 void setup_wifi() {
@@ -133,6 +143,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
+    call=millis();
     digitalWrite(relay, LOW);
     leds[0] = CRGB::Green;
     FastLED.show();
@@ -145,6 +156,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(relay, HIGH);
   }
   else {
+    call=millis();
     digitalWrite(relay, HIGH);
     leds[0] = CRGB::Red;
     FastLED.show();
@@ -169,7 +181,13 @@ void reconnect() {
   }
 }
 void loop() {
-
+  // led white standby
+  timer=millis();
+  if (timer - previousMillis >= intervallo + call) {
+    previousMillis = timer;
+    leds[0] = CRGB::White;
+    FastLED.show();
+  }
   if (!client.connected()) {
     reconnect();
   }
@@ -213,11 +231,6 @@ void loop() {
     leds[0] = CRGB::Black;
     FastLED.show();
     */
-  }
-  if (timer - previousMillis >= interval + call) {
-    previousMillis = time;
-    leds[0] = CRGB::White;
-    FastLED.show();
   }
 }
 
