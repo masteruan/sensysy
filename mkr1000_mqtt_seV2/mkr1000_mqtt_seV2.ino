@@ -1,8 +1,14 @@
 /*
 * Satellite
-* 30 Maggio 2017
+* 11 Luglio 2017
 * TFL
 * Arduino MKR 1000
+*
+* Satellite numero 3
+* intopic3
+* IP 10.13.0.16
+* pubblish time3
+* pubblish amp3
 *
 * DHT-11 pin 5
 * NO Photoresistor pin A0
@@ -29,6 +35,14 @@ CRGB leds[NUM_LEDS];
 #define DHTPIN 5
 #define DHTTYPE DHT11
 
+// Standby
+// in the loop there is a if that time-previousMillis >= interval + call
+// put leds white
+unsigned long timer;
+unsigned long previousMillis = 0;
+const long intervallo = 10;
+unsigned long call;
+
 // Update these with values suitable for your network.
 const char* ssid = "TalentGarden";
 const char* password = "Calabiana2017";
@@ -39,7 +53,7 @@ PubSubClient client(espClient);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
-int relay = 7;
+int relay = 6;
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -99,7 +113,7 @@ void setup_wifi() {
   Serial.print("signal strength (RSSI):");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
-  
+
   /*
   leds[0] = CRGB::Purple;
   FastLED.show();
@@ -113,7 +127,7 @@ void setup_wifi() {
 // if plus topic
 // void callback(Sting topic, byte* payload, unsigned int length) {
 void callback(char* topic, byte* payload, unsigned int length) {
- 
+
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -124,6 +138,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
+    call = millis();
     digitalWrite(relay, LOW);
     leds[0] = CRGB::Green;
     FastLED.show();
@@ -136,6 +151,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(relay, HIGH);
   }
   else {
+    call = millis();
     digitalWrite(relay, HIGH);
     leds[0] = CRGB::Red;
     FastLED.show();
@@ -160,13 +176,19 @@ void reconnect() {
   }
 }
 void loop() {
-
+  // led white standby
+  timer = millis();
+  if (timer - previousMillis >= intervallo+call) {
+    previousMillis = timer;
+    leds[0] = CRGB::White;
+    FastLED.show();
+  }
   if (!client.connected()) {
     reconnect();
   }
-  
+
   client.loop();
-  
+
   long now = millis();
   if (now - lastMsg > 10000) {
     lastMsg = now;
@@ -189,7 +211,7 @@ void loop() {
     Serial.print("Publish message: ");
     Serial.println(msg);
     Serial.print(lux);
-    
+
     //client.publish("outTopic", msg);
     client.publish("time3",String(value).c_str(), true);
     client.publish("amp3",String(AmpsRMS).c_str(), true);
@@ -202,6 +224,7 @@ void loop() {
     */
   }
 }
+
 float getVPP()
 {
   float result;

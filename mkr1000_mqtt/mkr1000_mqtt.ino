@@ -1,9 +1,18 @@
 /*
 * Satellite
-* 30 Maggio 2017
+* 11 Luglio2017
 * TFL
 * Arduino MKR 1000
 *
+* Satellite numero 1
+* intopic
+* IP 10.13.0.14
+* pubblish time
+* pubblish temp
+* pubblish lux
+* pubblish humi
+* pubblish gas
+* 
 * DHT-11 pin 5
 * NO Photoresistor pin A0
 * Gas pin A1
@@ -13,6 +22,8 @@
 * Relay pin 6
 *
 * */
+
+
 #include "FastLED.h"
 #include <PubSubClient.h>
 #include "DHT.h"
@@ -27,6 +38,14 @@ CRGB leds[NUM_LEDS];
 // dht
 #define DHTPIN 5
 #define DHTTYPE DHT11
+
+// Standby
+// in the loop there is a if that time-previousMillis >= interval + call
+// put leds white
+unsigned long timer;
+unsigned long previousMillis = 0;
+const long intervallo = 10;
+unsigned long call;
 
 // Update these with values suitable for your network.
 const char* ssid = "Modem4G-C0BD";
@@ -112,6 +131,7 @@ void setup_wifi() {
 // void callback(Sting topic, byte* payload, unsigned int length) {
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
+  call = millis();
   Serial.print(topic);
   Serial.print("] ");
   for (int i = 0; i < length; i++) {
@@ -121,7 +141,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
-    digitalWrite(builtinLed, HIGH);
+    call = millis();
+    digitalWrite(relay, HIGH);
     leds[0] = CRGB::Green;
     FastLED.show();
   }
@@ -132,7 +153,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(relay, LOW);
   }
   else {
-    digitalWrite(builtinLed, LOW);
+    call = millis();
     digitalWrite(relay, LOW);
     leds[0] = CRGB::Red;
     FastLED.show();
@@ -160,7 +181,13 @@ void reconnect() {
   }
 }
 void loop() {
-
+  // led white standby
+  timer=millis();
+  if (timer - previousMillis >= intervallo + call) {
+    previousMillis = timer;
+    leds[0] = CRGB::White;
+    FastLED.show();
+  }
   if (!client.connected()) {
     reconnect();
   }
@@ -204,6 +231,7 @@ void loop() {
     FastLED.show();
     */
   }
+
 }
 float getVPP()
 {
